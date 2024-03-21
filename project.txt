@@ -1,0 +1,78 @@
+Shell Project
+
+Built on a terminal and a shell interacting with the os
+
+Concepts
+
+1. Process Id (Pid) and Parent Process Identifier (PPID)
+
+  Process is a program in execution.
+  It has a unique Identifier
+
+  pid_t is a signed integer(in unix) witch represents a process id // pid_t pid = getpid();
+  get with getpid()
+
+  Parent Process is the process that creates another process.
+  getppid()
+
+  
+2. Exectoing a program (execve sys call)
+
+execve - execute programs. Use in tandum with argv to call bin commands
+NOTE- on sucess it doesnt return. So call in child process.
+
+
+3. Command Line Args (argc and argv)
+4. Creating Process (fork sys call)
+    
+    After a new child is created both processes will execute the next instruction following the fork() call
+    When a child exists it returns back to the parent
+    When a child exits, it returns back to the parent
+    If the parent has already exited before child returns, the child get stranded in what is called a orphan
+
+     -parent process finishes before the child, so the child is orphanded 
+      so the init process adoped the orphaned process. making the parent 1
+5. Suspending Process (wait sys call)
+
+wait is important because it reaps the zombie process from the pid table
+
+6. File Infomation (stat sys call)
+
+
+7. Environment (printenv, etc)
+
+
+orphan -parent finishes before child
+
+zombie- child finishes before parent
+
+getline()
+make a buffer size
+malloc buffer (not needed can just be char *buf =NULL)
+getline(&buf, &n, stdin) - the reason they take pointers is to realloc if the line isnt large enough
+
+
+Strtok()-> tokenize strings to make own arguments
+
+
+Command History and Navigation: Implement a feature that keeps track of the user’s command history, and allows them to navigate through it using the arrow keys.
+Command Auto-completion: Implement a feature that auto-completes commands as the user types them. This could be based on the commands’ initial characters and could also include the auto-completion of file or directory names.
+Syntax Highlighting: Add syntax highlighting to make your shell more visually appealing and user-friendly. Different types of inputs or outputs could be highlighted in different colors.
+Job Control: Allow users to put jobs in the background and bring them back to the foreground. This would let users run multiple commands at the same time.
+Aliases: Allow users to create aliases for longer commands that they use frequently.
+Custom Prompts: Allow users to customize their shell prompt, including things like colors, the inclusion of the current directory or git branch, etc.
+
+
+Ideas:
+
+Creating a new command that’s not already available in existing shells can be challenging, as many useful commands have already been implemented. However, you could consider creating a command that’s tailored to your specific needs or workflow. Here are a few ideas:
+
+bulkrename: A command that allows you to rename all files in a directory that match a certain pattern. While there are ways to do this with existing commands, having a dedicated command might simplify the process.
+netusage: A command that monitors and displays real-time network usage statistics. While there are standalone applications that do this, integrating one into your shell could be convenient.
+proj: A command that sets up a new project in your programming language of choice. It could create a new directory, initialize a git repository, set up a standard directory structure, and so on.
+remind: A command that sends you a reminder about a task after a certain amount of time.
+learn: A command that takes a topic as an argument and opens up several web pages in your browser related to that topic for learning purposes.
+
+
+
+
