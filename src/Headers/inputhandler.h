@@ -15,10 +15,11 @@ private:
   const char *delim;
 
 public:
-  InputHandler() : cmd(NULL), n(120), delim(" \n") {}
+  InputHandler() : cmd(NULL), n(120), delim((char *)" \n") {}
   ~InputHandler();
   char **parseInput(int &argc);
   char **handleCDCommand(char **argv); // dont like this but it tells the execvp
   char **handleLSCommand(char **argv, int &argc);
   void printPrompt(char *cwd, size_t size);
+  char **autoComplete(char **argv);
 };

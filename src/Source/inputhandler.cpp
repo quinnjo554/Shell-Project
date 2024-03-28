@@ -1,6 +1,8 @@
 #include "inputhandler.h"
+#include <cstddef>
 #include <cstring>
-
+#include <dirent.h>
+#include <filesystem>
 #define PRINT_BLUE(cwd) printf("\033[0;34m%s\033[0m", cwd)
 #define PRINT_RED(cwd) printf("\033[0;31m%s\033[0m", cwd)
 #define PRINT_GREEN(cwd) printf("\033[0;32m%s\033[0m", cwd)
@@ -15,14 +17,11 @@ InputHandler::~InputHandler() {
 
 char **InputHandler::parseInput(int &argc) {
 
-  // todo: use the stat command
-  struct stat fileStat;
   argc = 0;
   char **argv = new char *[MAX_ARGS]; // Set size for max arguments
   char cwd[1024];
   size_t n = 0; // Declare and initialize n for getline
   char *cmd = (char *)malloc(MAX_LINE_LENGTH); // Allocate memory for cmd
-
   printPrompt(cwd, sizeof(cwd));
 
   if (getline(&cmd, &n, stdin) == -1) {
@@ -42,12 +41,14 @@ char **InputHandler::parseInput(int &argc) {
       exit(-1);
     }
   }
-
+  autoComplete(argv);
   argv = handleLSCommand(argv, argc);
-  // this returns a null pointer potensially so has to be called last
-  // put in a function together and have it ruten null if neither is called or
-  // something
-  argv = handleCDCommand(argv);
+  // spotify command here.
+  //  this returns a null pointer potensially so has to be called last
+  //  put in a function together and have it ruten null if neither is called or
+  //  something
+
+  argv = handleCDCommand(argv); // needs to be last function
 
   if (argv != nullptr) {
     argv[argc] = NULL; // c is wierd and last arg needs to be null terminated
@@ -95,5 +96,18 @@ char **InputHandler::handleLSCommand(char **argv, int &argc) {
     argv[argc++] = (char *)"--color=auto"; // Cast for compatibility
   }
 
+  return argv;
+}
+
+char **InputHandler::autoComplete(char **argv) {
+
+  for (const auto &entry : std::filesystem::directory_iterator(".")) {
+    std::string filename = entry.path().filename().string();
+    if (argv[1] && filename.find(argv[1]) == 0) {
+      argv[1] = strdup(
+          filename.c_str()); // duplicate the string to avoid dangling pointer
+      return argv;
+    }
+  }
   return argv;
 }
