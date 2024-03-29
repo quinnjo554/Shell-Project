@@ -1,13 +1,12 @@
 #include "shell.h"
 
 void Shell::run() {
-  while (true) { //ass prob
+  while (true) { // ass prob
 
-    int argc=0;
-    char** argv = inputHandler.parseInput(argc);
+    int argc = 0;
+    char **argv = inputHandler.parseInput(argc);
     executeCmd(argv);
     delete[] argv;
-
   }
   free(cmd);
 }
@@ -23,7 +22,7 @@ void Shell::executeCmd(char **argv) {
 
   if (pid == 0) {
 
-    if (execvp(argv[0], argv) == -1) {
+    if (execvp(argv[0], argv) == -1) { // argv ['cd', '../', nullptr]
       fprintf(stderr, "Error: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
     }
