@@ -22,4 +22,8 @@ public:
   char **handleLSCommand(char **argv, int &argc);
   void printPrompt(char *cwd, size_t size);
   char **autoComplete(char **argv);
+  size_t WriteCallback(void *contents, size_t size, size_t nmemb,
+                       std::string *userp);
+  std::string spotifyAPIRequest(const std::string &url,
+                                const std::string &token)
 };

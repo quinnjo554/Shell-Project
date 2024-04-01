@@ -16,7 +16,6 @@ InputHandler::~InputHandler() {
 }
 
 char **InputHandler::parseInput(int &argc) {
-
   argc = 0;
   char **argv = new char *[MAX_ARGS]; // Set size for max arguments
   char cwd[1024];
@@ -110,4 +109,45 @@ char **InputHandler::autoComplete(char **argv) {
     }
   }
   return argv;
+}
+size_t InputHandler::WriteCallback(void *contents, size_t size, size_t nmemb,
+                                   std::string *userp) {
+  userp->append((char *)contents, size * nmemb);
+  return size * nmemb;
+}
+
+std::string spotifyAPIRequest(const std::string &url,
+                              const std::string &token) {
+  CURL *curl;
+  CURLcode res;
+  std::string readBuffer;
+
+  curl_global_init(CURL_GLOBAL_DEFAULT);
+  curl = curl_easy_init();
+
+  if (curl) {
+    struct curl_slist *headers = NULL;
+    headers =
+        curl_slist_append(headers, ("Authorization: Bearer " + token).c_str());
+    headers = curl_slist_append(headers, "Accept: application/json");
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+    res = curl_easy_perform(curl);
+
+    if (res != CURLE_OK) {
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+    }
+
+    curl_easy_cleanup(curl);
+  }
+
+  curl_global_cleanup();
+
+  return readBuffer;
 }
