@@ -1,6 +1,7 @@
 CXX = g++
 INC_DIR = -Iinclude -Iinclude/sdl -Isrc/Headers -Isrc/Interfaces
 LIB_DIR = -Llib
+LIBS = -lcurl
 
 SRC_DIR = src
 OBJ_DIR = obj

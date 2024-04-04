@@ -1,6 +1,9 @@
 #include "inputhandler.h"
 #include <cstddef>
+#include <cstdio>
 #include <cstring>
+#include <curl/curl.h>
+#include <curl/easy.h>
 #include <dirent.h>
 #include <filesystem>
 #define PRINT_BLUE(cwd) printf("\033[0;34m%s\033[0m", cwd)
@@ -40,19 +43,13 @@ char **InputHandler::parseInput(int &argc) {
       exit(-1);
     }
   }
+
   autoComplete(argv);
   argv = handleLSCommand(argv, argc);
-  // spotify command here.
-  //  this returns a null pointer potensially so has to be called last
-  //  put in a function together and have it ruten null if neither is called or
-  //  something
-
   argv = handleCDCommand(argv); // needs to be last function
-
   if (argv != nullptr) {
     argv[argc] = NULL; // c is wierd and last arg needs to be null terminated
   }
-
   return argv;
 }
 
@@ -110,14 +107,32 @@ char **InputHandler::autoComplete(char **argv) {
   }
   return argv;
 }
+
+void InputHandler::printSpotifyRequest() {
+  std::ifstream tokenFile("token.txt");
+  std::stringstream buffer;
+  buffer << tokenFile.rdbuf();
+  const std::string token =
+      "BQC5D75Cyu8CRMZt1hjpHC5FZEeqWOQ8SAnTpl5vmWlfC9-"
+      "9rzqSSUrQKUDTZqe8X3hjRRi8z9fywKLMyyitWS03USn7QmX0lz005gfzAqzQ3ypIj7k";
+
+  std::string url = "https://api.spotify.com/v1/me/player/";
+
+  std::string resonse = spotifyAPIPlaySongRequest(url, token);
+  std::cout << resonse << "\n";
+}
+/**
+ *Move WriteCallback and spotifyAPIRequest to a api call or curl class
+ * */
+
 size_t InputHandler::WriteCallback(void *contents, size_t size, size_t nmemb,
                                    std::string *userp) {
   userp->append((char *)contents, size * nmemb);
   return size * nmemb;
 }
 
-std::string spotifyAPIRequest(const std::string &url,
-                              const std::string &token) {
+std::string InputHandler::spotifyAPIPlaySongRequest(const std::string &url,
+                                                    const std::string &token) {
   CURL *curl;
   CURLcode res;
   std::string readBuffer;
@@ -127,6 +142,12 @@ std::string spotifyAPIRequest(const std::string &url,
 
   if (curl) {
     struct curl_slist *headers = NULL;
+    struct curl_slist *body = NULL;
+
+    const char *json_data =
+        "{\"context_uri\": \"spotify:album:5ht7ItJgpBH7W6vJ5BqpPr\", "
+        "\"offset\": {\"position\": 5}, \"position_ms\": 0}";
+
     headers =
         curl_slist_append(headers, ("Authorization: Bearer " + token).c_str());
     headers = curl_slist_append(headers, "Accept: application/json");
@@ -134,6 +155,9 @@ std::string spotifyAPIRequest(const std::string &url,
 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS,
+                     "content_uri=spotify:album:5ht7ItJgpBH7W6vJ5BqpPr");
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(json_data));
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
@@ -146,8 +170,6 @@ std::string spotifyAPIRequest(const std::string &url,
 
     curl_easy_cleanup(curl);
   }
-
-  curl_global_cleanup();
 
   return readBuffer;
 }

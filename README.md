@@ -1,4 +1,5 @@
 Need curl to install,
+sudo apt-get install libcurl4-openssl-dev,
 need make,
 for linux,
 

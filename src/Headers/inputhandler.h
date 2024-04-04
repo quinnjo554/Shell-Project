@@ -1,9 +1,14 @@
 #include <cstddef>
+#include <curl/curl.h>
+#include <fstream>
+#include <iostream>
 #include <sched.h>
+#include <sstream>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -22,8 +27,9 @@ public:
   char **handleLSCommand(char **argv, int &argc);
   void printPrompt(char *cwd, size_t size);
   char **autoComplete(char **argv);
-  size_t WriteCallback(void *contents, size_t size, size_t nmemb,
-                       std::string *userp);
-  std::string spotifyAPIRequest(const std::string &url,
-                                const std::string &token)
+  static size_t WriteCallback(void *contents, size_t size, size_t nmemb,
+                              std::string *userp);
+  std::string spotifyAPIPlaySongRequest(const std::string &url,
+                                        const std::string &token);
+  void printSpotifyRequest();
 };

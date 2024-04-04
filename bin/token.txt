@@ -1,0 +1,18 @@
+BQA55Nuw3_YN4ePr2jYuDTV_EYeyz12-31mgRqRJdndn7WMELZsiGtNCsGPLOjVCc04hcRjR_1-nUO-mmOKZ9cUcXdQUfYWqcP0rfRWK2FI8hNmvKUw
+
+curl --request PUT \
+  --url https://api.spotify.com/v1/me/player/play \
+  --header 'Authorization: Bearer BQA55Nuw3_YN4ePr2jYuDTV_EYeyz12-31mgRqRJdndn7WMELZsiGtNCsGPLOjVCc04hcRjR_1-nUO-mmOKZ9cUcXdQUfYWqcP0rfRWK2FI8hNmvKUw' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "context_uri": "spotify:album:5ht7ItJgpBH7W6vJ5BqpPr",
+    "offset": {
+        "position": 5
+    },
+    "position_ms": 0
+}'
+
+
+curl --request GET \
+  --url https://api.spotify.com/v1/me/player/devices \
+  --header 'Authorization: Bearer BQA55Nuw3_YN4ePr2jYuDTV_EYeyz12-31mgRqRJdndn7WMELZsiGtNCsGPLOjVCc04hcRjR_1-nUO-mmOKZ9cUcXdQUfYWqcP0rfRWK2FI8hNmvKUw' \

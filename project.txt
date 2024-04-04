@@ -83,4 +83,9 @@ create proj - creates a project in a language;
 run multiple processes at the same time;
 
 
+ curl -X POST "https://accounts.spotify.com/api/token" \
+     -H "Content-Type: application/x-www-form-urlencoded" \
+     -d "grant_type=client_credentials&client_id=77616a9f0ccb463e89afde04fca9717d&client_secret=3c7265d09a0045679291bacdfc3f14dc"
+run this every hour.
+
 

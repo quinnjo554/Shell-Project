@@ -5,7 +5,9 @@ void Shell::run() {
 
     int argc = 0;
     char **argv = inputHandler.parseInput(argc);
-    executeCmd(argv);
+    if (argv[0]) {
+      executeCmd(argv);
+    }
     delete[] argv;
   }
   free(cmd);
