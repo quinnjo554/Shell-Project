@@ -5,7 +5,7 @@ void Shell::run() {
 
     int argc = 0;
     char **argv = inputHandler.parseInput(argc);
-    if (argv[0]) {
+    if (argv != nullptr) {
       executeCmd(argv);
     }
     delete[] argv;
@@ -30,6 +30,7 @@ void Shell::executeCmd(char **argv) {
     }
 
   } else {
+
     if (wait(NULL) == -1) {
       perror("wait failed");
     }

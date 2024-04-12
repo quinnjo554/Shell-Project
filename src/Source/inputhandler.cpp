@@ -19,6 +19,8 @@ InputHandler::~InputHandler() {
 }
 
 char **InputHandler::parseInput(int &argc) {
+  // make a function to generate a cmd and a argv so you can use it in
+  // cppCommand
   argc = 0;
   char **argv = new char *[MAX_ARGS]; // Set size for max arguments
   char cwd[1024];
@@ -30,6 +32,10 @@ char **InputHandler::parseInput(int &argc) {
     perror("getline failed");
     exit(-1);
   }
+  // make sure to exit if the line is empty
+  if (strcmp(cmd, "\n") == 0) {
+    return nullptr;
+  }
 
   cmd[strcspn(cmd, "\n")] = '\0'; // Add null terminator
 
@@ -38,12 +44,11 @@ char **InputHandler::parseInput(int &argc) {
   while (token && argc < MAX_ARGS) {
     argv[argc++] = token;
     token = strtok(NULL, delim);
-
-    if (strcmp(argv[0], "exit") == 0) {
-      exit(-1);
-    }
   }
 
+  if (strcmp(argv[0], "exit") == 0) {
+    exit(-1);
+  }
   autoComplete(argv);
   argv = handleLSCommand(argv, argc);
   argv = handleCDCommand(argv); // needs to be last function
@@ -52,6 +57,16 @@ char **InputHandler::parseInput(int &argc) {
   }
   return argv;
 }
+
+// CRAZY IDEA: make a compiler that takes
+// /src/->src/headers/interfaces/:headers->(F)balls.h  compile that and make a
+// folder structure based on that steps for making a proj command c++, rust,
+// python
+//  1.) check if argv is proj
+//  2.) make a function that creats a directory with the name of the project
+//  3.) make a function that creates boiler plate folders and makefile (c++)
+//  4.) make a funciton that creates folders for rust (need more info on how
+//  that works) 5.)
 
 char **InputHandler::handleCDCommand(char **argv) {
 
@@ -83,13 +98,14 @@ void InputHandler::printPrompt(char *cwd, size_t size) {
 char **InputHandler::handleLSCommand(char **argv, int &argc) {
   if (argv[0] && strcmp(argv[0], "ls") == 0) {
     // Add "--color=auto" as the second argument (index 1)
-
-    setenv(
-        "LS_COLORS",
-        "di=1;35:ln=36:so=35:pi=30;44:ex=1;33:bd=46;34:cd=43;34:su=41;30:sg=" // set LS_COLORS env so the colors are cool
-        "46;30:tw=42;30:ow=43;30",
-        1);
-    argv[argc++] = (char *)"--color=auto"; // Cast for compatibility
+    if (argc < MAX_ARGS - 1) {
+      setenv("LS_COLORS",
+             "di=1;35:ln=36:so=35:pi=30;44:ex=1;33:bd=46;34:cd=43;34:su=41;30:"
+             "sg=" // set LS_COLORS env so the colors are cool
+             "46;30:tw=42;30:ow=43;30",
+             1);
+      argv[argc++] = (char *)"--color=auto"; // Cast for compatibility
+    }
   }
 
   return argv;
@@ -100,8 +116,7 @@ char **InputHandler::autoComplete(char **argv) {
   for (const auto &entry : std::filesystem::directory_iterator(".")) {
     std::string filename = entry.path().filename().string();
     if (argv[1] && filename.find(argv[1]) == 0) {
-      argv[1] = strdup(
-          filename.c_str()); // duplicate the string to avoid dangling pointer
+      strncpy(argv[1], filename.c_str(), MAX_LINE_LENGTH);
       return argv;
     }
   }
