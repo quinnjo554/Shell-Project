@@ -12,13 +12,12 @@
 class Shell {
 private:
   int argc;
-  char *cmd;
   const char *delim;
   size_t n;
   InputHandler inputHandler;
 
 public:
-  Shell() : argc(0), cmd(NULL), delim(" \n"), n(120) {}
+  Shell() : argc(0), delim(" \n"), n(120) {}
   void executeCmd(char **argv);
   void run();
 };

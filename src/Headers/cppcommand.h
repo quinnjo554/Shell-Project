@@ -1,3 +1,9 @@
+#include <cstring>
+#include <iostream>
+#include <sys/stat.h>
+
+enum class CommandType { DEFAULT, NAMED_PROJECT, INVALID };
+
 class CppCommand {
 private:
   char **argv;
@@ -5,8 +11,13 @@ private:
 
 public:
   CppCommand(char **argv, int argc);
+  ~CppCommand();
+  CommandType validateCmd();
+  void execute();
   void generateMakeFile();
-  void generateDirectory();
+  bool generateDirectory();
+  bool touch(const char *filename);
+  std::string CommandTypeToString(CommandType commandType);
   // make your own argv here so you can free it without fucking up the other
   // commands
 };

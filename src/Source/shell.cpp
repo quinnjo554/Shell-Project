@@ -1,16 +1,17 @@
 #include "shell.h"
-
+#define MAX_ARGS 10 // Maximum number of arguments
 void Shell::run() {
   while (true) { // ass prob
 
     int argc = 0;
-    char **argv = inputHandler.parseInput(argc);
+    char **argv = new char *[MAX_ARGS]; // Set size for max arguments
+    argv = inputHandler.parseInput(argv, argc);
     if (argv != nullptr) {
       executeCmd(argv);
     }
-    delete[] argv;
+
+    delete[] argv; // Delete the array
   }
-  free(cmd);
 }
 
 void Shell::executeCmd(char **argv) {

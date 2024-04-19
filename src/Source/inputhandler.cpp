@@ -1,4 +1,5 @@
 #include "inputhandler.h"
+#include "cppcommand.h"
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -15,14 +16,15 @@
 #define MAX_LINE_LENGTH 250 // Maximum size of cmd
 
 InputHandler::~InputHandler() {
-  free(cmd); // Assuming cmd is allocated using malloc in the constructor
+  if (cmd != NULL) {
+    free(cmd); // Assuming cmd is allocated using malloc in the constructor
+  }
 }
 
-char **InputHandler::parseInput(int &argc) {
+char **InputHandler::parseInput(char **argv, int &argc) {
   // make a function to generate a cmd and a argv so you can use it in
   // cppCommand
   argc = 0;
-  char **argv = new char *[MAX_ARGS]; // Set size for max arguments
   char cwd[1024];
   size_t n = 0; // Declare and initialize n for getline
   char *cmd = (char *)malloc(MAX_LINE_LENGTH); // Allocate memory for cmd
@@ -49,9 +51,12 @@ char **InputHandler::parseInput(int &argc) {
   if (strcmp(argv[0], "exit") == 0) {
     exit(-1);
   }
-  autoComplete(argv);
+  CppCommand cppcmd = CppCommand(argv, argc);
+  cppcmd.execute();
+  argv = autoComplete(argv);
   argv = handleLSCommand(argv, argc);
   argv = handleCDCommand(argv); // needs to be last function
+
   if (argv != nullptr) {
     argv[argc] = NULL; // c is wierd and last arg needs to be null terminated
   }
@@ -116,7 +121,7 @@ char **InputHandler::autoComplete(char **argv) {
   for (const auto &entry : std::filesystem::directory_iterator(".")) {
     std::string filename = entry.path().filename().string();
     if (argv[1] && filename.find(argv[1]) == 0) {
-      strncpy(argv[1], filename.c_str(), MAX_LINE_LENGTH);
+      strcpy(argv[1], filename.c_str()); // Copy the filename
       return argv;
     }
   }

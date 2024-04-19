@@ -22,14 +22,14 @@ private:
 public:
   InputHandler() : cmd(NULL), n(120), delim((char *)" \n") {}
   ~InputHandler();
-  char **parseInput(int &argc);
+  char **parseInput(char **argv, int &argc);
   char **handleCDCommand(char **argv); // dont like this but it tells the execvp
   char **handleLSCommand(char **argv, int &argc);
   void printPrompt(char *cwd, size_t size);
   char **autoComplete(char **argv);
-  char **createArgvFromTokens() static size_t
-      WriteCallback(void *contents, size_t size, size_t nmemb,
-                    std::string *userp);
+  char **createArgvFromTokens();
+  static size_t WriteCallback(void *contents, size_t size, size_t nmemb,
+                              std::string *userp);
   std::string spotifyAPIPlaySongRequest(const std::string &url,
                                         const std::string &token);
   void printSpotifyRequest();
