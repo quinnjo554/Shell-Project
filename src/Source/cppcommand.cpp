@@ -1,9 +1,11 @@
 #include "cppcommand.h"
 #include <cstring>
 #include <fstream>
+#include <ostream>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 CppCommand::~CppCommand() {
   for (int i = 0; i < argc; ++i) {
     delete[] argv[i]; // Free each string
@@ -33,15 +35,115 @@ CommandType CppCommand::validateCmd() {
   return CommandType::INVALID;
 }
 
-void CppCommand::execute() {
-  bool made = generateDirectory();
-  if (made) {
-    generateMakeFile();
+char **CppCommand::execute(char **argv, int &argc) {
+
+  CppCommand cmd(argv, argc);
+  CommandType cmdValidation = cmd.validateCmd();
+
+  if (cmdValidation != CommandType::NAMED_PROJECT) {
+    return argv;
   }
+
+  bool made = cmd.generateDirectory(argv[2]);
+  if (made) {
+
+    cmd.generateMakeFile();
+    cmd.generateDirectory((char *)"src");
+
+    std::string filename = std::string(argv[2]) + ".cpp";
+    cmd.touch(filename.c_str());
+    chdir("..");
+
+    cmd.generateDirectory((char *)"include");
+    chdir("..");
+
+    cmd.generateDirectory((char *)"test");
+    chdir("..");
+    // fill the maincpp file with a int main std::cout << add files to your own
+    // proj
+    // then check if make is installed and run make
+  }
+  return nullptr;
 }
+
 void CppCommand::generateMakeFile() {
+
   char *make = (char *)"Makefile";
-  touch(make);
+
+  if (touch(make) != 0) {
+    return;
+  };
+
+  if (touch(make) != 0) {
+    return;
+  }
+
+  std::ofstream makefile;
+  makefile.open(make);
+  if (!makefile) {
+    std::cerr << "Unable to open file example.txt";
+    return;
+  }
+  makefile
+      << "EXE = " << argv[2] << "\nCC = gcc\n"
+      << "CXX = g++\n"
+      << "LD = g++\n"
+      << "CFLAGS = \n"
+      << "CXXFLAGS = \n"
+      << "CPPFLAGS = -Wall\n"
+      << "DEPFLAGS = -MMD -MP\n"
+      << "LDFLAGS = \n"
+      << "LDLIBS = \n"
+      << "BIN = bin\n"
+      << "OBJ = obj\n"
+      << "SRC = src\n"
+      << "SOURCES := $(wildcard $(SRC)/*.c $(SRC)/*.cc $(SRC)/*.cpp "
+         "$(SRC)/*.cxx)\n"
+      << "OBJECTS := \\\n"
+      << "\t$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(wildcard $(SRC)/*.c)) \\\n"
+      << "\t$(patsubst $(SRC)/%.cc, $(OBJ)/%.o, $(wildcard $(SRC)/*.cc)) \\\n"
+      << "\t$(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(wildcard $(SRC)/*.cpp)) \\\n"
+      << "\t$(patsubst $(SRC)/%.cxx, $(OBJ)/%.o, $(wildcard $(SRC)/*.cxx))\n"
+      << "DEPENDS := $(OBJECTS:.o=.d)\n"
+      << "COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@\n"
+      << "COMPILE.cxx = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c -o $@\n"
+      << "LINK.o = $(LD) $(LDFLAGS) $(LDLIBS) $(OBJECTS) -o $@\n"
+      << ".DEFAULT_GOAL = all\n"
+      << ".PHONY: all\n"
+      << "all: $(BIN)/$(EXE)\n"
+      << "$(BIN)/$(EXE): $(SRC) $(OBJ) $(BIN) $(OBJECTS)\n"
+      << "\t$(LINK.o)\n"
+      << "$(SRC):\n"
+      << "\tmkdir -p $(SRC)\n"
+      << "$(OBJ):\n"
+      << "\tmkdir -p $(OBJ)\n"
+      << "$(BIN):\n"
+      << "\tmkdir -p $(BIN)\n"
+      << "$(OBJ)/%.o: $(SRC)/%.c\n"
+      << "\t$(COMPILE.c) $<\n"
+      << "$(OBJ)/%.o: $(SRC)/%.cc\n"
+      << "\t$(COMPILE.cxx) $<\n"
+      << "$(OBJ)/%.o: $(SRC)/%.cpp\n"
+      << "\t$(COMPILE.cxx) $<\n"
+      << "$(OBJ)/%.o: $(SRC)/%.cxx\n"
+      << "\t$(COMPILE.cxx) $<\n"
+      << ".PHONY: remake\n"
+      << "remake: clean $(BIN)/$(EXE)\n"
+      << ".PHONY: run\n"
+      << "run: $(BIN)/$(EXE)\n"
+      << "\t./$(BIN)/$(EXE)\n"
+      << ".PHONY: clean\n"
+      << "clean:\n"
+      << "\t$(RM) $(OBJECTS)\n"
+      << "\t$(RM) $(DEPENDS)\n"
+      << "\t$(RM) $(BIN)/$(EXE)\n"
+      << ".PHONY: reset\n"
+      << "reset:\n"
+      << "\t$(RM) -r $(OBJ)\n"
+      << "\t$(RM) -r $(BIN)\n"
+      << "-include $(DEPENDS)\n";
+
+  makefile.close();
 }
 
 bool CppCommand::touch(const char *filename) {
@@ -49,28 +151,23 @@ bool CppCommand::touch(const char *filename) {
   file.open(filename);
   if (!file) {
     std::cerr << "Unable to open file example.txt";
-    return false;
+    return 1;
   }
   file.close();
-  return true; // Success
+  return 0; // Success
 }
 
-bool CppCommand::generateDirectory() {
+bool CppCommand::generateDirectory(char *dir) {
   // proper command should look like // cproj -m "Name"
-  CommandType cmdValidation = validateCmd();
-  std::string cmdType = CommandTypeToString(cmdValidation);
-  if (cmdType != "NAMED_PROJECT") {
-    return false;
-  }
-  if (!argv || !argv[2]) {
-    return false;
-  }
   struct stat st = {0};
-  if (stat(argv[2], &st) != -1) {
+  if (!argv || !dir) {
     return false;
   }
-  mkdir(argv[2], 0755); // owner has permissions
-  chdir(argv[2]);
+  if (stat(dir, &st) != -1) {
+    return false;
+  }
+  mkdir(dir, 0755); // owner has permissions
+  chdir(dir);
   return true;
 }
 

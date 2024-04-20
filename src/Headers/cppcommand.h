@@ -13,9 +13,9 @@ public:
   CppCommand(char **argv, int argc);
   ~CppCommand();
   CommandType validateCmd();
-  void execute();
+  static char **execute(char **argv, int &argc);
   void generateMakeFile();
-  bool generateDirectory();
+  bool generateDirectory(char *dir);
   bool touch(const char *filename);
   std::string CommandTypeToString(CommandType commandType);
   // make your own argv here so you can free it without fucking up the other

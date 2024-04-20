@@ -17,18 +17,49 @@
 
 InputHandler::~InputHandler() {
   if (cmd != NULL) {
-    free(cmd); // Assuming cmd is allocated using malloc in the constructor
+    delete[] cmd; // Assuming cmd is allocated using malloc in the constructor
   }
 }
 
 char **InputHandler::parseInput(char **argv, int &argc) {
-  // make a function to generate a cmd and a argv so you can use it in
-  // cppCommand
+
   argc = 0;
   char cwd[1024];
-  size_t n = 0; // Declare and initialize n for getline
-  char *cmd = (char *)malloc(MAX_LINE_LENGTH); // Allocate memory for cmd
+  size_t n = 0;
+  char *cmd = new char[MAX_LINE_LENGTH];
+
   printPrompt(cwd, sizeof(cwd));
+
+  if (createArgvFromTokens(argv, argc) == nullptr) {
+    return nullptr;
+  }
+  if (strcmp(argv[0], "exit") == 0) {
+    exit(-1);
+  }
+  if ((argv = CppCommand::execute(argv, argc)) == nullptr ||
+      (argv = autoComplete(argv)) == nullptr ||
+      (argv = handleLSCommand(argv, argc)) == nullptr ||
+      (argv = handleCDCommand(argv)) == nullptr) {
+    return nullptr;
+  }
+
+  if (argv != nullptr) {
+    argv[argc] = NULL; // c is wierd and last arg needs to be null terminated
+  }
+  return argv;
+}
+
+// CRAZY IDEA: make a compiler that takes
+// /src/->src/headers/interfaces/:headers->(F)balls.h  compile that and make a
+// folder structure based on that steps for making a proj command c++, rust,
+// python
+//  1.) check if argv is proj
+//  2.) make a function that creats a directory with the name of the project
+//  3.) make a function that creates boiler plate folders and makefile (c++)
+//  4.) make a funciton that creates folders for rust (need more info on how
+//  that works) 5.)
+
+char **InputHandler::createArgvFromTokens(char **argv, int &argc) {
 
   if (getline(&cmd, &n, stdin) == -1) {
     perror("getline failed");
@@ -47,31 +78,8 @@ char **InputHandler::parseInput(char **argv, int &argc) {
     argv[argc++] = token;
     token = strtok(NULL, delim);
   }
-
-  if (strcmp(argv[0], "exit") == 0) {
-    exit(-1);
-  }
-  CppCommand cppcmd = CppCommand(argv, argc);
-  cppcmd.execute();
-  argv = autoComplete(argv);
-  argv = handleLSCommand(argv, argc);
-  argv = handleCDCommand(argv); // needs to be last function
-
-  if (argv != nullptr) {
-    argv[argc] = NULL; // c is wierd and last arg needs to be null terminated
-  }
   return argv;
 }
-
-// CRAZY IDEA: make a compiler that takes
-// /src/->src/headers/interfaces/:headers->(F)balls.h  compile that and make a
-// folder structure based on that steps for making a proj command c++, rust,
-// python
-//  1.) check if argv is proj
-//  2.) make a function that creats a directory with the name of the project
-//  3.) make a function that creates boiler plate folders and makefile (c++)
-//  4.) make a funciton that creates folders for rust (need more info on how
-//  that works) 5.)
 
 char **InputHandler::handleCDCommand(char **argv) {
 
@@ -126,70 +134,4 @@ char **InputHandler::autoComplete(char **argv) {
     }
   }
   return argv;
-}
-
-void InputHandler::printSpotifyRequest() {
-  std::ifstream tokenFile("token.txt");
-  std::stringstream buffer;
-  buffer << tokenFile.rdbuf();
-  const std::string token =
-      "BQC5D75Cyu8CRMZt1hjpHC5FZEeqWOQ8SAnTpl5vmWlfC9-"
-      "9rzqSSUrQKUDTZqe8X3hjRRi8z9fywKLMyyitWS03USn7QmX0lz005gfzAqzQ3ypIj7k";
-
-  std::string url = "https://api.spotify.com/v1/me/player/";
-
-  std::string resonse = spotifyAPIPlaySongRequest(url, token);
-  std::cout << resonse << "\n";
-}
-/**
- *Move WriteCallback and spotifyAPIRequest to a api call or curl class
- * */
-
-size_t InputHandler::WriteCallback(void *contents, size_t size, size_t nmemb,
-                                   std::string *userp) {
-  userp->append((char *)contents, size * nmemb);
-  return size * nmemb;
-}
-
-std::string InputHandler::spotifyAPIPlaySongRequest(const std::string &url,
-                                                    const std::string &token) {
-  CURL *curl;
-  CURLcode res;
-  std::string readBuffer;
-
-  curl_global_init(CURL_GLOBAL_DEFAULT);
-  curl = curl_easy_init();
-
-  if (curl) {
-    struct curl_slist *headers = NULL;
-    struct curl_slist *body = NULL;
-
-    const char *json_data =
-        "{\"context_uri\": \"spotify:album:5ht7ItJgpBH7W6vJ5BqpPr\", "
-        "\"offset\": {\"position\": 5}, \"position_ms\": 0}";
-
-    headers =
-        curl_slist_append(headers, ("Authorization: Bearer " + token).c_str());
-    headers = curl_slist_append(headers, "Accept: application/json");
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS,
-                     "content_uri=spotify:album:5ht7ItJgpBH7W6vJ5BqpPr");
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(json_data));
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-
-    res = curl_easy_perform(curl);
-
-    if (res != CURLE_OK) {
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
-              curl_easy_strerror(res));
-    }
-
-    curl_easy_cleanup(curl);
-  }
-
-  return readBuffer;
 }
