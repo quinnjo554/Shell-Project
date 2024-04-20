@@ -75,10 +75,17 @@ proj: A command that sets up a new project in your programming language of choic
 remind: A command that sends you a reminder about a task after a certain amount of time.
 learn: A command that takes a topic as an argument and opens up several web pages in your browser related to that topic for learning purposes.
 
+ai- use a chatgpt or some ai to parse the command ie (ai -m "find all the files in the sub directoy and list there properties")
+'output': find . -type -f -name "*txt" -exec ls {} /
 
 create proj - creates a project in a language;
 
 run multiple processes at the same time;
 
+
+ curl -X POST "https://accounts.spotify.com/api/token" \
+     -H "Content-Type: application/x-www-form-urlencoded" \
+     -d "grant_type=client_credentials&client_id=77616a9f0ccb463e89afde04fca9717d&client_secret=3c7265d09a0045679291bacdfc3f14dc"
+run this every hour.
 
 
