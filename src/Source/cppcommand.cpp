@@ -35,20 +35,35 @@ CommandType CppCommand::validateCmd() {
   return CommandType::INVALID;
 }
 
-bool CppCommand::execute(char **argv, int &argc) {
+char **CppCommand::execute(char **argv, int &argc) {
 
   CppCommand cmd(argv, argc);
   CommandType cmdValidation = cmd.validateCmd();
 
   if (cmdValidation != CommandType::NAMED_PROJECT) {
-    return false;
+    return argv;
   }
 
-  bool made = cmd.generateDirectory();
+  bool made = cmd.generateDirectory(argv[2]);
   if (made) {
+
     cmd.generateMakeFile();
+    cmd.generateDirectory((char *)"src");
+
+    std::string filename = std::string(argv[2]) + ".cpp";
+    cmd.touch(filename.c_str());
+    chdir("..");
+
+    cmd.generateDirectory((char *)"include");
+    chdir("..");
+
+    cmd.generateDirectory((char *)"test");
+    chdir("..");
+    // fill the maincpp file with a int main std::cout << add files to your own
+    // proj
+    // then check if make is installed and run make
   }
-  return true;
+  return nullptr;
 }
 
 void CppCommand::generateMakeFile() {
@@ -129,10 +144,6 @@ void CppCommand::generateMakeFile() {
       << "-include $(DEPENDS)\n";
 
   makefile.close();
-
-  if (chdir("..") != 0) {
-    perror("chdir failed");
-  }
 }
 
 bool CppCommand::touch(const char *filename) {
@@ -146,17 +157,17 @@ bool CppCommand::touch(const char *filename) {
   return 0; // Success
 }
 
-bool CppCommand::generateDirectory() {
+bool CppCommand::generateDirectory(char *dir) {
   // proper command should look like // cproj -m "Name"
   struct stat st = {0};
-  if (!argv || !argv[2]) {
+  if (!argv || !dir) {
     return false;
   }
-  if (stat(argv[2], &st) != -1) {
+  if (stat(dir, &st) != -1) {
     return false;
   }
-  mkdir(argv[2], 0755); // owner has permissions
-  chdir(argv[2]);
+  mkdir(dir, 0755); // owner has permissions
+  chdir(dir);
   return true;
 }
 

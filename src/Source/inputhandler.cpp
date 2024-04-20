@@ -33,20 +33,19 @@ char **InputHandler::parseInput(char **argv, int &argc) {
   if (createArgvFromTokens(argv, argc) == nullptr) {
     return nullptr;
   }
-
   if (strcmp(argv[0], "exit") == 0) {
     exit(-1);
   }
-
-  CppCommand::execute(argv, argc);
-  argv = autoComplete(argv);
-  argv = handleLSCommand(argv, argc);
-  argv = handleCDCommand(argv); // needs to be last function
+  if ((argv = CppCommand::execute(argv, argc)) == nullptr ||
+      (argv = autoComplete(argv)) == nullptr ||
+      (argv = handleLSCommand(argv, argc)) == nullptr ||
+      (argv = handleCDCommand(argv)) == nullptr) {
+    return nullptr;
+  }
 
   if (argv != nullptr) {
     argv[argc] = NULL; // c is wierd and last arg needs to be null terminated
   }
-
   return argv;
 }
 
@@ -81,6 +80,7 @@ char **InputHandler::createArgvFromTokens(char **argv, int &argc) {
   }
   return argv;
 }
+
 char **InputHandler::handleCDCommand(char **argv) {
 
   if (argv[0] && strcmp(argv[0], "cd") == 0) {
