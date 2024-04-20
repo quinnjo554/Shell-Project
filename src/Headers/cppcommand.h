@@ -13,7 +13,7 @@ public:
   CppCommand(char **argv, int argc);
   ~CppCommand();
   CommandType validateCmd();
-  void execute();
+  static bool execute(char **argv, int &argc);
   void generateMakeFile();
   bool generateDirectory();
   bool touch(const char *filename);
