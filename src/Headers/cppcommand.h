@@ -14,6 +14,7 @@ public:
   ~CppCommand();
   CommandType validateCmd();
   static char **execute(char **argv, int &argc);
+  void generateMainFile();
   void generateMakeFile();
   bool generateDirectory(char *dir);
   bool touch(const char *filename);

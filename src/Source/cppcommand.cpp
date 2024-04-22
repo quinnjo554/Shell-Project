@@ -1,8 +1,10 @@
 #include "cppcommand.h"
+#include "shell.h"
 #include <cstring>
 #include <fstream>
 #include <ostream>
 #include <stdio.h>
+#include <string>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -25,9 +27,11 @@ CppCommand::CppCommand(char **argv, int argc) : argc(argc) {
 }
 
 CommandType CppCommand::validateCmd() {
+
   if (strcmp(this->argv[0], "cproj") == 0) {
     if (argc == 1) {
       return CommandType::INVALID;
+
     } else if (argc == 3 && strcmp(this->argv[1], "-m") == 0) {
       return CommandType::NAMED_PROJECT;
     }
@@ -39,6 +43,22 @@ char **CppCommand::execute(char **argv, int &argc) {
 
   CppCommand cmd(argv, argc);
   CommandType cmdValidation = cmd.validateCmd();
+  Shell shell;
+  // args containing make
+  char **makeArgv = new char *[2];
+  // args containing ./project
+  char **exeArgv = new char *[2];
+
+  char *exe = (char *)"./";
+  char *file = argv[2];
+  char buff[100];
+  snprintf(buff, sizeof(buff), "%s%s", exe, file);
+
+  makeArgv[0] = (char *)"make";
+  makeArgv[1] = nullptr;
+
+  exeArgv[0] = buff;
+  exeArgv[1] = nullptr;
 
   if (cmdValidation != CommandType::NAMED_PROJECT) {
     return argv;
@@ -50,30 +70,47 @@ char **CppCommand::execute(char **argv, int &argc) {
     cmd.generateMakeFile();
     cmd.generateDirectory((char *)"src");
 
-    std::string filename = std::string(argv[2]) + ".cpp";
-    cmd.touch(filename.c_str());
+    // make a main file with the proj name
+    cmd.generateMainFile();
     chdir("..");
-
     cmd.generateDirectory((char *)"include");
     chdir("..");
-
     cmd.generateDirectory((char *)"test");
     chdir("..");
-    // fill the maincpp file with a int main std::cout << add files to your own
-    // proj
-    // then check if make is installed and run make
+    shell.executeCmd(makeArgv);
+    chdir("bin");
+
+    shell.executeCmd(exeArgv);
+    chdir("..");
+    chdir("..");
+    delete[] makeArgv;
+    delete[] exeArgv;
   }
   return nullptr;
 }
 
-void CppCommand::generateMakeFile() {
+void CppCommand::generateMainFile() {
+  std::string filename = std::string(argv[2]) + ".cpp";
+  touch(filename.c_str());
 
-  char *make = (char *)"Makefile";
-
-  if (touch(make) != 0) {
+  std::ofstream file;
+  file.open(filename);
+  if (!file) {
+    std::cerr << "Unable to open file example.txt";
     return;
-  };
+  }
 
+  file << "#include <iostream>\n\n"
+       << "int main(){\n"
+       << "  std::cout << \"Project " << argv[2] << " has been made.\\n\";\n"
+       << "  return 0;\n"
+       << "}\n";
+
+  file.close();
+}
+
+void CppCommand::generateMakeFile() {
+  char *make = (char *)"Makefile";
   if (touch(make) != 0) {
     return;
   }
@@ -102,7 +139,8 @@ void CppCommand::generateMakeFile() {
       << "OBJECTS := \\\n"
       << "\t$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(wildcard $(SRC)/*.c)) \\\n"
       << "\t$(patsubst $(SRC)/%.cc, $(OBJ)/%.o, $(wildcard $(SRC)/*.cc)) \\\n"
-      << "\t$(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(wildcard $(SRC)/*.cpp)) \\\n"
+      << "\t$(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(wildcard $(SRC)/*.cpp)) "
+         "\\\n"
       << "\t$(patsubst $(SRC)/%.cxx, $(OBJ)/%.o, $(wildcard $(SRC)/*.cxx))\n"
       << "DEPENDS := $(OBJECTS:.o=.d)\n"
       << "COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@\n"
