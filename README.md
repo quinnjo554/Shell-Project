@@ -34,4 +34,4 @@ cd bin
 ./Main
 ```
 
-Please replace `Main` with the actual name of your executable file if it's different. This README should now provide clear instructions for setting up and running your project. Let me know if you need further assistance! 😊
+😊
