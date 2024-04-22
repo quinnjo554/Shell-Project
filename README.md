@@ -2,6 +2,10 @@
 
 This project is designed to enhance developer productivity by facilitating the creation of projects and the retrieval of any necessary documentation.
 
+## Showcase
+
+https://github.com/quinnjo554/Shell-Project/assets/82783326/5eb0752b-64f3-452d-8e7f-5c912e84e42e
+
 ## Prerequisites
 
 The following packages are required:
