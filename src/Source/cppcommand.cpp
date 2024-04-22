@@ -1,5 +1,6 @@
 #include "cppcommand.h"
 #include "shell.h"
+#include <cstddef>
 #include <cstring>
 #include <fstream>
 #include <ostream>
@@ -33,7 +34,11 @@ CommandType CppCommand::validateCmd() {
       return CommandType::INVALID;
 
     } else if (argc == 3 && strcmp(this->argv[1], "-m") == 0) {
-      return CommandType::NAMED_PROJECT;
+      std::string argument = std::string(this->argv[2]);
+      std::string quote = "\"";
+      if (argument.find(quote) != 0) {
+        return CommandType::NAMED_PROJECT;
+      }
     }
   }
   return CommandType::INVALID;
@@ -51,7 +56,7 @@ char **CppCommand::execute(char **argv, int &argc) {
 
   char *exe = (char *)"./";
   char *file = argv[2];
-  char buff[100];
+  char buff[100]; // could cause issues
   snprintf(buff, sizeof(buff), "%s%s", exe, file);
 
   makeArgv[0] = (char *)"make";
@@ -83,6 +88,7 @@ char **CppCommand::execute(char **argv, int &argc) {
     shell.executeCmd(exeArgv);
     chdir("..");
     chdir("..");
+
     delete[] makeArgv;
     delete[] exeArgv;
   }
