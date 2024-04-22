@@ -1,7 +1,7 @@
 #include "shell.h"
-#define MAX_ARGS 10 // Maximum number of arguments
+#define MAX_ARGS 10
 void Shell::run() {
-  while (true) { // ass prob
+  while (true) { // not good prob
 
     int argc = 0;
     char **argv = new char *[MAX_ARGS]; // Set size for max arguments
@@ -10,28 +10,23 @@ void Shell::run() {
       executeCmd(argv);
     }
 
-    delete[] argv; // Delete the array
+    delete[] argv;
   }
 }
 
 void Shell::executeCmd(char **argv) {
-
   pid_t pid = fork();
 
   if (pid == -1) {
     perror("fork failed");
     exit(-1);
   }
-
   if (pid == 0) {
-
-    if (execvp(argv[0], argv) == -1) { // argv ['cd', '../', nullptr]
+    if (execvp(argv[0], argv) == -1) {
       fprintf(stderr, "Error: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
     }
-
   } else {
-
     if (wait(NULL) == -1) {
       perror("wait failed");
     }

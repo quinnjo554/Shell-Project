@@ -1,7 +1,9 @@
 #include <cstddef>
 #include <curl/curl.h>
 #include <fstream>
+#include <functional>
 #include <iostream>
+#include <map>
 #include <sched.h>
 #include <sstream>
 #include <stdbool.h>
@@ -18,9 +20,13 @@ private:
   char *cmd;
   size_t n;
   const char *delim;
+  std::map<std::string, std::function<char **(char **argv, int &argc)>>
+      commandHandler;
+
+  void initCommandHandler();
 
 public:
-  InputHandler() : cmd(NULL), n(120), delim((char *)" \n") {}
+  InputHandler();
   ~InputHandler();
   char **parseInput(char **argv, int &argc);
   char **handleCDCommand(char **argv); // dont like this but it tells the execvp

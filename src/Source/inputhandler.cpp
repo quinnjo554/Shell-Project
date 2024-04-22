@@ -14,38 +14,54 @@
 #define PRINT_ORANGE(cwd) printf("\033[0;33m%s\033[0m", cwd)
 #define MAX_ARGS 10         // Maximum number of arguments
 #define MAX_LINE_LENGTH 250 // Maximum size of cmd
+InputHandler ::InputHandler()
+    : cmd(new char[MAX_LINE_LENGTH]), n(0), delim((char *)" \n") {
+  initCommandHandler();
+}
 
 InputHandler::~InputHandler() {
   if (cmd != NULL) {
-    delete[] cmd; // Assuming cmd is allocated using malloc in the constructor
+    delete[] cmd;
   }
+}
+
+void InputHandler::initCommandHandler() {
+  commandHandler["cd"] = [this](char **argv, int &argc) -> char ** {
+    return handleCDCommand(argv);
+  };
+  commandHandler["ls"] = [this](char **argv, int &argc) -> char ** {
+    return handleLSCommand(argv, argc);
+  };
+  commandHandler["exit"] = [this](char **argv, int &argc) -> char ** {
+    exit(-1);
+    return nullptr;
+  };
 }
 
 char **InputHandler::parseInput(char **argv, int &argc) {
 
   argc = 0;
-  char cwd[1024];
-  size_t n = 0;
-  char *cmd = new char[MAX_LINE_LENGTH];
+  char cwd[1024]; // could cause issues
 
   printPrompt(cwd, sizeof(cwd));
 
   if (createArgvFromTokens(argv, argc) == nullptr) {
     return nullptr;
   }
-  if (strcmp(argv[0], "exit") == 0) {
-    exit(-1);
+  if (commandHandler.count(argv[0]) > 0) {
+    argv = commandHandler[argv[0]](argv, argc);
+    if (argv == nullptr) {
+      return nullptr;
+    }
   }
   if ((argv = CppCommand::execute(argv, argc)) == nullptr ||
-      (argv = autoComplete(argv)) == nullptr ||
-      (argv = handleLSCommand(argv, argc)) == nullptr ||
-      (argv = handleCDCommand(argv)) == nullptr) {
+      (argv = autoComplete(argv)) == nullptr) {
     return nullptr;
   }
-
   if (argv != nullptr) {
     argv[argc] = NULL; // c is wierd and last arg needs to be null terminated
   }
+
   return argv;
 }
 
@@ -89,9 +105,9 @@ char **InputHandler::handleCDCommand(char **argv) {
         perror("chdir failed");
       }
     } else {
-      chdir(getenv("HOME")); // Change to home directory if no argument
+      chdir(getenv("HOME"));
     }
-    return nullptr; // No further processing
+    return nullptr; // no further processing
   }
   return argv; // need to run execvp
 }
@@ -112,15 +128,9 @@ char **InputHandler::handleLSCommand(char **argv, int &argc) {
   if (argv[0] && strcmp(argv[0], "ls") == 0) {
     // Add "--color=auto" as the second argument (index 1)
     if (argc < MAX_ARGS - 1) {
-      setenv("LS_COLORS",
-             "di=1;35:ln=36:so=35:pi=30;44:ex=1;33:bd=46;34:cd=43;34:su=41;30:"
-             "sg=" // set LS_COLORS env so the colors are cool
-             "46;30:tw=42;30:ow=43;30",
-             1);
-      argv[argc++] = (char *)"--color=auto"; // Cast for compatibility
+      argv[argc++] = (char *)"--color=auto";
     }
   }
-
   return argv;
 }
 
